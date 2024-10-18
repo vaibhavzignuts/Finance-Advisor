@@ -21,7 +21,11 @@ import MenuItem from '@mui/material/MenuItem'
 import Button from '@mui/material/Button'
 
 // Hook Imports
+import { signOut } from 'firebase/auth'
+
 import { useSettings } from '@core/hooks/useSettings'
+import { auth } from '../../../firebase'
+import { useAuth } from '../../../context/AuthContext'
 
 // Styled component for badge content
 const BadgeContentSpan = styled('span')({
@@ -43,6 +47,7 @@ const UserDropdown = () => {
   // Hooks
   const router = useRouter()
   const { settings } = useSettings()
+  const { logout } = useAuth()
 
   const handleDropdownOpen = () => {
     !open ? setOpen(true) : setOpen(false)
@@ -61,8 +66,16 @@ const UserDropdown = () => {
   }
 
   const handleUserLogout = async () => {
-    // Redirect to login page
-    router.push('/login')
+    try {
+      await logout()
+
+      // Redirect to login page
+      router.push('/login')
+    } catch (error) {
+      console.error('Error signing out: ', error)
+
+      // Handle error (e.g., show a notification to the user)
+    }
   }
 
   return (

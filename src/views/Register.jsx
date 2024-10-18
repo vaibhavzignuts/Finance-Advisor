@@ -84,6 +84,7 @@ const Register = ({ mode }) => {
 
   // Hooks
   const router = useRouter()
+  const { signup } = useAuth()
   const { settings } = useSettings()
   const theme = useTheme()
   const hidden = useMediaQuery(theme.breakpoints.down('md'))
@@ -101,11 +102,13 @@ const Register = ({ mode }) => {
   const handleClickShowPasswordConfirm = () => setIsPasswordConfirmShown(show => !show)
 
   const onSubmit = async data => {
+    e.preventDefault()
+
     try {
-      await createUserWithEmailAndPassword(auth, data.email, data.password)
+      await signup(data.email, data.password)
 
       // Registration successful, redirect to home page
-      router.push('/')
+      router.push('/login')
     } catch (error) {
       // Handle Firebase auth errors
       setError('root', {

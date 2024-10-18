@@ -40,6 +40,7 @@ import { useImageVariant } from '@core/hooks/useImageVariant'
 import { useSettings } from '@core/hooks/useSettings'
 import { Loginschema } from '../schema/validators'
 import { auth } from '../firebase'
+import { useAuth } from '../context/AuthContext'
 
 // Styled Custom Components
 const LoginIllustration = styled('img')(({ theme }) => ({
@@ -68,6 +69,7 @@ const MaskImg = styled('img')({
 const LoginV2 = ({ mode }) => {
   // States
   const [isPasswordShown, setIsPasswordShown] = useState(false)
+  const { login } = useAuth()
 
   // Vars
   const darkImg = '/images/pages/auth-mask-dark.png'
@@ -109,16 +111,10 @@ const LoginV2 = ({ mode }) => {
 
   const onSubmit = async data => {
     try {
-      await signInWithEmailAndPassword(auth, data.email, data.password)
-
-      // Login successful, redirect to home page
+      await login(data.email, data.password)
       router.push('/home')
     } catch (error) {
-      // Handle Firebase auth errors
-      setError('root', {
-        type: 'manual',
-        message: 'Invalid email or password'
-      })
+      console.error('Login error:', error)
     }
   }
 
