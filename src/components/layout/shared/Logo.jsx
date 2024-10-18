@@ -68,7 +68,7 @@ const Logo = ({ color }) => {
         transitionDuration={transitionDuration}
         isBreakpointReached={isBreakpointReached}
       >
-        Finance
+        {themeConfig.templateName}
       </LogoText>
     </div>
   )

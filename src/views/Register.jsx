@@ -4,10 +4,14 @@
 import { useState } from 'react'
 
 // Next Imports
+
 import { useRouter } from 'next/navigation'
 
 import { useForm, Controller } from 'react-hook-form'
+
+// import { zodResolver } from '@hookform/resolvers/zod'
 import { zodResolver } from '@hookform/resolvers/zod'
+import * as z from 'zod'
 
 // MUI Imports
 import useMediaQuery from '@mui/material/useMediaQuery'
@@ -26,7 +30,7 @@ import classnames from 'classnames'
 // Component Imports
 import { TextField } from '@mui/material'
 
-import { signInWithEmailAndPassword } from 'firebase/auth'
+import { createUserWithEmailAndPassword } from 'firebase/auth'
 
 import Link from '@components/Link'
 import Logo from '@components/layout/shared/Logo'
@@ -38,7 +42,7 @@ import themeConfig from '@configs/themeConfig'
 // Hook Imports
 import { useImageVariant } from '@core/hooks/useImageVariant'
 import { useSettings } from '@core/hooks/useSettings'
-import { Loginschema } from '../schema/validators'
+import { Registerschema } from '../schema/validators'
 import { auth } from '../firebase'
 
 // Styled Custom Components
@@ -65,9 +69,10 @@ const MaskImg = styled('img')({
   zIndex: -1
 })
 
-const LoginV2 = ({ mode }) => {
+const Register = ({ mode }) => {
   // States
   const [isPasswordShown, setIsPasswordShown] = useState(false)
+  const [isPasswordConfirmShown, setIsPasswordConfirmShown] = useState(false)
 
   // Vars
   const darkImg = '/images/pages/auth-mask-dark.png'
@@ -93,6 +98,22 @@ const LoginV2 = ({ mode }) => {
   )
 
   const handleClickShowPassword = () => setIsPasswordShown(show => !show)
+  const handleClickShowPasswordConfirm = () => setIsPasswordConfirmShown(show => !show)
+
+  const onSubmit = async data => {
+    try {
+      await createUserWithEmailAndPassword(auth, data.email, data.password)
+
+      // Registration successful, redirect to home page
+      router.push('/')
+    } catch (error) {
+      // Handle Firebase auth errors
+      setError('root', {
+        type: 'manual',
+        message: error.message
+      })
+    }
+  }
 
   const {
     control,
@@ -100,27 +121,14 @@ const LoginV2 = ({ mode }) => {
     setError,
     formState: { errors }
   } = useForm({
-    resolver: zodResolver(Loginschema),
+    resolver: zodResolver(Registerschema),
     defaultValues: {
+      username: '',
       email: '',
-      password: ''
+      password: '',
+      confirmPassword: ''
     }
   })
-
-  const onSubmit = async data => {
-    try {
-      await signInWithEmailAndPassword(auth, data.email, data.password)
-
-      // Login successful, redirect to home page
-      router.push('/home')
-    } catch (error) {
-      // Handle Firebase auth errors
-      setError('root', {
-        type: 'manual',
-        message: 'Invalid email or password'
-      })
-    }
-  }
 
   return (
     <div className='flex bs-full justify-center'>
@@ -148,9 +156,22 @@ const LoginV2 = ({ mode }) => {
         <div className='flex flex-col gap-6 is-full sm:is-auto md:is-full sm:max-is-[400px] md:max-is-[unset] mbs-11 sm:mbs-14 md:mbs-0'>
           <div className='flex flex-col gap-1'>
             <Typography variant='h4'>{`Welcome to ${themeConfig.templateName}! 👋🏻`}</Typography>
-            <Typography>Please sign-in to your account and start the adventure</Typography>
+            <Typography>Please sign-up to your account and start the adventure</Typography>
           </div>
           <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-5'>
+            <Controller
+              name='username'
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  label='Username'
+                  error={!!errors.username}
+                  helperText={errors.username?.message}
+                />
+              )}
+            />
             <Controller
               name='email'
               control={control}
@@ -159,7 +180,6 @@ const LoginV2 = ({ mode }) => {
                   {...field}
                   fullWidth
                   label='Email'
-                  placeholder='Enter your email'
                   error={!!errors.email}
                   helperText={errors.email?.message}
                 />
@@ -173,7 +193,6 @@ const LoginV2 = ({ mode }) => {
                   {...field}
                   fullWidth
                   label='Password'
-                  placeholder='············'
                   type={isPasswordShown ? 'text' : 'password'}
                   error={!!errors.password}
                   helperText={errors.password?.message}
@@ -189,18 +208,45 @@ const LoginV2 = ({ mode }) => {
                 />
               )}
             />
+            <Controller
+              name='confirmPassword'
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  label='Confirm Password'
+                  type={isPasswordConfirmShown ? 'text' : 'password'}
+                  error={!!errors.confirmPassword}
+                  helperText={errors.confirmPassword?.message}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position='end'>
+                        <IconButton
+                          edge='end'
+                          onClick={handleClickShowPasswordConfirm}
+                          onMouseDown={e => e.preventDefault()}
+                        >
+                          <i className={isPasswordConfirmShown ? 'tabler-eye-off' : 'tabler-eye'} />
+                        </IconButton>
+                      </InputAdornment>
+                    )
+                  }}
+                />
+              )}
+            />
             <div className='flex justify-between items-center gap-x-3 gap-y-1 flex-wrap'>
               <FormControlLabel control={<Checkbox />} label='Remember me' />
             </div>
             <Button fullWidth variant='contained' type='submit'>
-              Login
+              Register
             </Button>
             {errors.root && <Typography color='error'>{errors.root.message}</Typography>}
             <div className='flex justify-center items-center flex-wrap gap-2'>
-              <Typography>New on our platform?</Typography>
-              <Link href='/register' color='primary'>
-                Create an account
-              </Link>
+              <Typography>Already have an account?</Typography>
+              <Typography component='a' href='/login' color='primary' sx={{ cursor: 'pointer' }}>
+                Login to your account
+              </Typography>
             </div>
           </form>
         </div>
@@ -209,4 +255,4 @@ const LoginV2 = ({ mode }) => {
   )
 }
 
-export default LoginV2
+export default Register
