@@ -12,7 +12,9 @@ import {
   createUserWithEmailAndPassword
 } from 'firebase/auth'
 
-import { auth } from '../firebase'
+import { doc, setDoc } from 'firebase/firestore'
+
+import { auth, db } from '../firebase'
 
 const AuthContext = createContext()
 
@@ -36,8 +38,12 @@ export const AuthProvider = ({ children }) => {
     return signInWithEmailAndPassword(auth, email, password)
   }
 
-  const signup = (email, password) => {
-    return createUserWithEmailAndPassword(auth, email, password)
+  const signup = async (email, password) => {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+
+    const user = userCredential.user
+
+    await setDoc(doc(db, 'users', user.uid))
   }
 
   const logout = async () => {
